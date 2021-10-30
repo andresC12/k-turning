@@ -3,17 +3,29 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "serve": "vue-cli-service serve",
+    "serve": "vue-cli-service serve --skip-plugins @vue/cli-plugin-eslint",
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@fullcalendar/core": "^5.10.0",
+    "@fullcalendar/daygrid": "^5.10.0",
+    "@fullcalendar/interaction": "^5.10.0",
+    "@fullcalendar/vue3": "^5.10.0",
+    "@popperjs/core": "^2.10.2",
+    "axios": "^0.23.0",
     "core-js": "^3.6.5",
-    "vue": "^3.0.0"
+    "v-calendar": "^3.0.0-alpha.6",
+    "vue": "^3.0.0",
+    "vue-moment": "^4.1.0",
+    "vue-router": "^4.0.0-0",
+    "vue-single-date-picker": "^0.5.12",
+    "vue3-datepicker": "^0.2.5"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "~4.5.0",
     "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-plugin-router": "^4.5.14",
     "@vue/cli-service": "~4.5.0",
     "@vue/compiler-sfc": "^3.0.0",
     "babel-eslint": "^10.1.0",
