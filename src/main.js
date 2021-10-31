@@ -19,7 +19,7 @@ DB.transaction(function (exe) {
 		1. ESTADOS DE CITA [NO DISPONIBLE, CREADA].
 		1. ESTADOS DE CITA DETALLE [TOMADA, COMPLETADA, VENCIDA(ESTA LA DEFINE EL OPERARIO ENTRADA)]. 
 	*/
-	exe.executeSql("CREATE TABLE IF NOT EXISTS cita_detalle (id INTEGER PRIMARY KEY, id_user_transportador integer,id_user_operario integer, peso_entrada float, peso_salida float,peso_neto float,autorizacion, VARCHAR estado VARCHAR,fecha_registro VARCHAR)");
+	exe.executeSql("CREATE TABLE IF NOT EXISTS cita_detalle (id INTEGER PRIMARY KEY, id_user_transportador integer,id_user_operario integer, peso_entrada float, peso_salida float,peso_neto float,autorizacion VARCHAR, estado VARCHAR,fecha_registro VARCHAR)");
 
 });	
 
@@ -34,7 +34,8 @@ function insertRoles(){
 
 function insertUser(){
 	DB.transaction(function (exe) {
-	      exe.executeSql("insert into user (id_rol, email, password) values(2,'Andres Caceres','12345')");
+	    exe.executeSql("insert into user (id_rol, email, password) values(2,'administrador','12345')");
+	    exe.executeSql("insert into user (id_rol, email, password, placa) values(1,'transporte@klever.com','12345', 'RCA-442')");
 	});   
 }
 

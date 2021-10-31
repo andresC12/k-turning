@@ -32,7 +32,7 @@
 					<h4 class="state2" v-show="item.disponible == 0"><i class="fas fa-circle"></i>Vencida</h4>
 				</div>
 				<div class="single-date-button">
-					<button>Tomar cita</button>
+					<button @click="registerDate(item)">Tomar cita</button>
 				</div>
 			</div>
 		</div>
@@ -198,6 +198,8 @@
 	export default{
 		data(){
 			return{
+				id_user_transportador: localStorage.getItem('id_user_transportador'),
+				autorizacion: localStorage.getItem('autorizacion'),
 				selected: moment().format('YYYY-MM-DD'),
 				dates: [
 					{
@@ -218,8 +220,15 @@
 			}
 		},
 		methods:{
+			registerDate(date){
+				var self = this;
+				this.DB.transaction(function (exe) {
+				    exe.executeSql(`insert into cita_detalle (id_user_transportador, autorizacion, estado, fecha_registro) values('${self.id_user_transportador}', '${self.autorizacion}', 'Tomada', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`, [], function(tran, data){
+				    	console.log("exito");
+				    });
+				});
+			},
 			listDates(fecha){
-				alert(fecha);
 				this.dateList = [];
 				var self = this;
 				this.DB.transaction(function (tran) {

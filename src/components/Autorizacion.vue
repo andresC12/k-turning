@@ -18,7 +18,7 @@
 			</div>
 		</div>
 		<div class="confirm-button">
-			<button class="button" id="accept" v-show="status_button" @click="aceept()">Continuar</button>
+			<button class="button" id="accept" v-show="status_button" @click="accept()">Continuar</button>
 		</div>
 	</div>
 </template>
@@ -158,19 +158,21 @@
 						codigo: "89182646261",
 						tipo: "Ingreso de contenedor"
 					}
-				]
+				],
+				DB: null
 			}
 		},
 		methods:{
 			openDetail(item){
+				localStorage.setItem('autorizacion', item.codigo);
 				this.status_button= true;
 			},
-			aceept(){
+			accept(){
 				location.href = "dates";
 			}
 		},
 		mounted(){
-
+			this.DB = openDatabase('kturning', '1.0', 'This is a client side database', 50 * 1024 * 1024);
 		}
 	}
 </script>

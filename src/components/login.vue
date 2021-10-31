@@ -235,6 +235,7 @@
                    				location.href = "dashboard";
                    			}
                    			if(data.rows[0].id_rol == 1){
+                   				localStorage.setItem('id_user_transportador', data.rows[0].id);
                    				location.href = "autorizacion";
                    			}
                    			console.log(data.rows[0])
