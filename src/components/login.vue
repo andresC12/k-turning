@@ -233,10 +233,15 @@
                    			self.statusText = "Credenciales correctas";
                    			if(data.rows[0].id_rol == 2){
                    				location.href = "dashboard";
+                   				localStorage.setItem('id_user_admin', data.rows[0].id);
                    			}
                    			if(data.rows[0].id_rol == 1){
                    				localStorage.setItem('id_user_transportador', data.rows[0].id);
                    				location.href = "autorizacion";
+                   			}
+                   			if(data.rows[0].id_rol == 3){
+                   				localStorage.setItem('id_user_operario', data.rows[0].id);
+                   				location.href = "consult";
                    			}
                    			console.log(data.rows[0])
                    			//location.href = "dashboard";

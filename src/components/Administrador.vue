@@ -5,7 +5,7 @@
 				<h4>K-Turning</h4>
 			</div>
 			<div class="button-section">
-				<button class="user" @click="status_user= true">Registrar usuario</button>
+				<!--<button class="user" @click="status_user= true">Registrar usuario</button>-->
 				<button @click="status_date = true" class="cita">Registrar disponibilidad</button>
 				<button class="logout" @click="logout()">Cerrar sesión</button>
 			</div>
@@ -13,30 +13,23 @@
 		<div class="header-calendar">
 			<!--<h4>Calendario de citas</h4>
 			<button @click="status_date = true">Registrar cita</button>-->
+			<div class="select-fecha">
+				<div class="variantes">					
+					<div class="variante1">
+						<select v-model="date_selected" @change="listEvents(date_selected)">
+							<option v-for="option in dates" v-bind:value="option.fecha">
+							    {{ option.text }}
+							</option>
+						</select>	
+					</div>
+				</div>
+			</div>
 			<div class="calendar">
 				<table id="dates2">
 					<tr>
 						<th>Modulo</th>
 						<th v-for="item in ranges">{{item}}</th>
-					</tr>
-					<tr>
-						<th>CG</th>
-						<td>
-							<tr>
-								<td>Retiro</td>
-							</tr>
-							<tr>
-								<td>Ingreso</td>
-							</tr>
-							<tr>
-								<td>1234</td>
-							</tr>
-						</td>
-					</tr>
-					<tr>
-						<th>CG</th>
-						<td></td>
-					</tr>
+					</tr>					
 				</table>
 			</div>
 		</div>
@@ -192,6 +185,21 @@
 		box-sizing: border-box;
 	}
 
+	.select-fecha{
+		padding: 10px 0px;
+	}
+
+
+	.border2{
+		border: 1px solid #ddd;
+		padding: 3px;
+		width: 100%;
+		background-color: #5390C9;
+		font-weight: 600;
+		color: #fff;
+		display:block;
+		margin-top: 7px;
+	}
 	.register-button, .table-dates{
 		padding: 10px 20px;
 	}
@@ -211,6 +219,11 @@
 	  background: #7BBD8F;
 	  color: white;
 	  text-align: center;
+	}
+	.center{
+		width: 100%;
+		text-align: center;		
+		font-weight: 600;
 	}
 
 	#dates td, #dates th {
@@ -236,7 +249,7 @@
 	  font-size: 14px;
 	}
 
-	#dates2 tr:nth-child(even){background-color: #f2f2f2;}
+	#dates2 tr{background-color: #f2f2f2;}
 
 	.table-dates table{
 		width: 100%;
@@ -485,11 +498,28 @@
 		},
 		data(){
 			return{
+				dates: [
+					{
+						text: "Hoy",
+						fecha: moment().format('YYYY-MM-DD')
+					},
+					{
+						text: "Mañana",
+						fecha:moment().add(1, 'days')		
+					},
+					{
+						text: "Pasado mañana",
+						fecha:moment().add(2, 'days')		
+					}
+				],
 				ranges: ['00-01','01-02','02-03','03-04','04-05','05-06','06-07','07-08','08-09','09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18','18-19','19-20','20-21','21-22','22-23'],
 				date: moment().format('YYYY-MM-DD'),
 				status_date: false,
+				date_selected:moment().format('YYYY-MM-DD'),
 				status_user: false,
 				status_transportador: false,
+				events: [],
+				modulos: ['CG','MG'],
 				form:{
 					email: "",
 					password: "",
@@ -586,12 +616,85 @@
                    		}
                		});
            		});
+			},
+			listEvents(date){
+				date = moment(date).format('YYYY-MM-DD');	
+				var self = this;	
+				var aux = 0;
+				self.events = [];	
+				this.DB.transaction(function (tran) {
+              		tran.executeSql(`select c.modulo,c.hora,u.placa,c.cupos,c.disponible,c.fecha from cita_detalle cd join cita c on cd.id_cita = c.id join user u on cd.id_user_transportador = u.id where c.fecha = '${date}' and cd.estado = 'Tomada' order by 1,2 asc`, [], function (tran, data) {
+              			self.clearTable();
+              			console.log(`select c.modulo,c.hora,u.placa,c.cupos,c.disponible,c.fecha from cita_detalle cd join cita c on cd.id_cita = c.id join user u on cd.id_user_transportador = u.id where c.fecha = '${date}' and cd.estado = 'Tomada' order by 1,2 asc`);
+                   		if (data.rows.length > 0) {
+							   
+							   for(let i = 0; i < data.rows.length; i++){
+								   self.events.push(data.rows[i])
+							   }			   
+							   if(aux == 0)self.drawRows();
+							   aux++;
+                   		}
+               		});
+           		});
+			},
+			clearTable(){
+				this.modulos.forEach((modulo) => {
+					var nodo = document.getElementById(modulo);
+					if (nodo) {
+						if (nodo.parentNode) {
+						  nodo.parentNode.removeChild(nodo);
+						}	
+					}
+					var table = document.getElementById("dates2");
+					table.innerHTML += `<tr id="${modulo}"><th>${modulo}</th></tr>`;
+				});
+			},
+			drawRows(){						
+				var self = this;
+				this.modulos.forEach((modulo) => {//CG,MG		
+					var trRow =  document.getElementById(modulo);
+					self.events.forEach((event) => {
+						if(modulo == event.modulo){//EJEMPLO CG == CG
+							self.ranges.forEach((range) => {	
+								var exist = document.getElementById(modulo+'_'+range)
+								if(exist){
+									if(range == event.hora)exist.innerHTML += `<td ><span class="border2">${event.placa}</span></td>`;				
+											
+								}else{
+									if(range == event.hora){									
+										trRow.innerHTML += 	`									
+											<tr>
+												<td id='${modulo}_${range}'>
+													<span class="center">CUP: ${event.disponible}</span>
+													<span class="border2">${event.placa}</span>
+												</td>
+											</tr>
+										`;
+									
+									}else {
+										trRow.innerHTML += 	`<td id='${modulo}_${range}'></td>`;
+									}
+								}
+								
+
+							});
+						}	
+						
+						
+					});
+				});
+				
+				
 			}
 		},
 		mounted(){
 			this.DB = openDatabase('kturning', '1.0', 'This is a client side database', 50 * 1024 * 1024);
 			this.listUsers();
 			this.listDates();
+			this.listEvents(moment().format('YYYY-MM-DD'));
+			if (!localStorage.getItem('id_user_admin')) {
+				location.href = "/";
+			}
 		}
 	}
 </script>

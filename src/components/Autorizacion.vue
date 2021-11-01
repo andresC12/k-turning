@@ -173,6 +173,9 @@
 		},
 		mounted(){
 			this.DB = openDatabase('kturning', '1.0', 'This is a client side database', 50 * 1024 * 1024);
+			if (!localStorage.getItem('id_user_transportador')) {
+				location.href = "/";
+			}
 		}
 	}
 </script>
