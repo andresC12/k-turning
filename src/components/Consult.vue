@@ -118,6 +118,7 @@
 
 	.content-likes-list{
 		width: 75%;
+		overflow-y: scroll;
 		height: 40vh;
 		background: #fff;
 		border-radius: 20px;
@@ -331,7 +332,7 @@
 					self.peso_neto = self.peso_entrada - self.peso_salida;
 				}
 				this.DB.transaction(function (tran) {
-              		tran.executeSql(`update cita_detalle set peso_entrada = ${self.peso_entrada}, peso_salida = ${self.peso_salida}, peso_neto = ${self.peso_neto}, id_user_operario = ${self.id_user}, estado = 'Finalizada' where id =${self.form[0].id} `, [], function (tran, data) {
+              		tran.executeSql(`update cita_detalle set peso_entrada = ${self.peso_entrada}, peso_salida = ${self.peso_salida}, peso_neto = ${self.peso_neto}, id_user_operario = ${self.id_user}, estado = 'Cumplida' where id =${self.form[0].id} `, [], function (tran, data) {
                    		self.consultDate(self.codigo);
                    		self.status_peso = false;
                		});

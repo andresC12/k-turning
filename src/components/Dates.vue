@@ -61,7 +61,7 @@
 						<div class="single-date-info-2">
 							<h4><i class="far fa-calendar-alt"></i> {{ item.fecha_registro.split(" ")[0] }}</h4>
 							<h4><i class="far fa-clock"></i> {{ item.fecha_registro.split(" ")[1] }}</h4>
-							<h4 class="state" v-if="item.estado == 'Finalizada'"><i class="fas fa-circle"></i>{{ item.estado }}</h4>
+							<h4 class="state" v-if="item.estado == 'Cumplida'"><i class="fas fa-circle"></i>{{ item.estado }}</h4>
 							<h4 class="state3" v-if="item.estado == 'Tomada' && item.fecha >= date"><i class="fas fa-circle"></i>{{ item.estado }}</h4>
 							<h4 class="state4" v-if="item.fecha < date && !item.peso_entrada"><i class="fas fa-circle"></i>Vencida</h4>
 						</div>
@@ -435,7 +435,7 @@
 			validarCita(date){
 				var self = this;
 				this.DB.transaction(function (exe) {
-				    exe.executeSql(`select * from cita_detalle where id_user_transportador = ${self.id_user_transportador} and id_cita = ${date.id} and estado != 'Finalizada'`, [], function(tran, data){
+				    exe.executeSql(`select * from cita_detalle where id_user_transportador = ${self.id_user_transportador} and id_cita = ${date.id} and estado != 'Cumplida'`, [], function(tran, data){
 				    	if (data.rows.length > 0) {
 				    		alert("Ya has tomado esta cita")
 				    	}else{

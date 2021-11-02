@@ -17,7 +17,7 @@
 				</div>
 			</div>
 			<div class="copyright">
-				<span>Developed by <b>Andrés Cáceres</b></span>
+				<span>Developed by <b>Klever</b></span>
 			</div>
 		</div>
 	</div>
