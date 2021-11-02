@@ -23,7 +23,7 @@
 	</div>
 </template>
 
-<style>
+<style scoped>
 
 	*{
 		margin: 0;

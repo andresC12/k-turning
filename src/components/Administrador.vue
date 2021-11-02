@@ -37,8 +37,8 @@
 		<div class="container-detail-likes" v-show="status_date">
 			<div class="content-likes-list">
 				<div class="header-dates-popup">
-					<h4>Registrar cita</h4>
-					<i class="fas fa-times" @click="status_date = false"></i>
+					<h4>Registrar disponibilidad</h4>
+					<i class="fas fa-times" @click="closeModal()"></i>
 				</div>
 				<div class="enter-information">
 					<div class="entrance-information2">
@@ -51,6 +51,7 @@
 									<option>MG</option>
 								</select>	
 							</div>
+							<small v-show="status_small">Campo obligatorio</small>
 						</div>
 					</div>
 					<div class="entrance-information2">
@@ -61,9 +62,11 @@
 						      class="bg-white border px-2 py-1 rounded"
 						      :value="inputValue"
 						      v-on="inputEvents"
+						      :min-date="new Date()"
 						    />
 						  </template>
 						</DatePicker>
+						<small v-show="status_small">Campo obligatorio</small>
 					</div>
 					<div class="entrance-information2">
 						<h4>Hora</h4>
@@ -74,6 +77,7 @@
 									<option v-for="item in ranges">{{item}}</option>
 								</select>	
 							</div>
+							<small v-show="status_small">Campo obligatorio</small>
 						</div>
 					</div>
 					<div class="entrance-information2">
@@ -86,15 +90,17 @@
 									<option>Contenedor Importación</option>
 								</select>	
 							</div>
+							<small v-show="status_small">Campo obligatorio</small>
 						</div>
 					</div>
 					<div class="entrance-information2">
 						<h4>Cupos:</h4>
 						<input type="text" placeholder="Numero de cupos" v-model="form_date.cupos">
+						<small v-show="status_small">Campo obligatorio</small>
 					</div>
 				</div>
 				<div class="register-button">
-					<button @click="insertDate()">Registrar cita</button>
+					<button @click="insertDate()">Registrar disponibilidad</button>
 				</div>
 				<div class="table-dates">
 					<table id="dates">
@@ -174,10 +180,15 @@
 				</div>
 			</div>
 		</div>
+		<div class="content-loader" v-if="status_loader">
+			<div class="rotate-icon">
+				
+			</div>
+		</div>
 	</div>
 </template>
 
-<style>
+<style scoped>
 
 	*{
 		padding: 0;
@@ -187,6 +198,45 @@
 
 	.select-fecha{
 		padding: 10px 0px;
+	}
+
+	.content-loader{
+		width: 100%;
+		height: 100vh;
+		background: rgba(255, 255, 255,.8);
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.rotate-icon{
+		width: 40px;
+		height: 40px;
+		border-top: 6px solid #5493C9;
+		border-right: 4px solid #5493C9;
+		border-radius: 50%;
+		animation: rotar 1s infinite ease-in-out;
+	}
+
+	@keyframes rotar {
+		from{
+			transform: rotate(0deg);
+		}
+		to{
+			transform: rotate(360deg);
+		}
+		
+	}
+
+	small{
+		color: red;
+		font-family: 'Roboto Slab',sans-serif;
+		font-weight: 500;
 	}
 
 
@@ -382,11 +432,13 @@
 		z-index: 5000000000;
 	}
 
+
 	.content-likes-list{
 		width: 60%;
 		height: 80vh;
 		background: #fff;
 		border-radius: 20px;
+		overflow-y: scroll;
 		z-index: 5000000000;
 	}
 
@@ -498,6 +550,8 @@
 		},
 		data(){
 			return{
+				status_loader: false,
+				status_small: false,
 				dates: [
 					{
 						text: "Hoy",
@@ -513,7 +567,9 @@
 					}
 				],
 				ranges: ['00-01','01-02','02-03','03-04','04-05','05-06','06-07','07-08','08-09','09-10','10-11','11-12','12-13','13-14','14-15','15-16','16-17','17-18','18-19','19-20','20-21','21-22','22-23'],
-				date: moment().format('YYYY-MM-DD'),
+				date:"",
+				minDate:moment().format('YYYY-MM-DD'),
+				inputValue: moment().format('YYYY-MM-DD'),
 				status_date: false,
 				date_selected:moment().format('YYYY-MM-DD'),
 				status_user: false,
@@ -555,14 +611,33 @@
 			logout(){
 				location.href = "/";
 			},
+			closeModal(){
+				this.status_date = false;
+				location.reload();
+			},
+			validateFields(){
+				let status = true;
+				if (this.form_date.modulo == 0) status = false;
+				if (this.form_date.hora == 0) status = false;
+				if (this.form_date.cupos == "") status = false;
+				if (this.form_date.tipo_de_cita == 0) status = false;
+
+				return status;
+			},
 			insertDate(){
 				var self = this;
-				this.DB.transaction(function (exe) {
-				    exe.executeSql(`insert into cita (fecha, hora, cupos, disponible, estado, tipo_de_cita, modulo, fecha_registro) values('${moment(self.date).format('YYYY-MM-DD')}','${self.form_date.hora}','${self.form_date.cupos}', '${self.form_date.cupos}', '${self.form_date.estado}', '${self.form_date.tipo_de_cita}', '${self.form_date.modulo}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`, [], function(tran, data){
-				    	self.listDates();
-						self.clearForm(true);
-				    });
-				});
+				if (this.validateFields()) {
+					this.DB.transaction(function (exe) {
+					    exe.executeSql(`insert into cita (fecha, hora, cupos, disponible, estado, tipo_de_cita, modulo, fecha_registro) values('${moment(self.date).format('YYYY-MM-DD')}','${self.form_date.hora}','${self.form_date.cupos}', '${self.form_date.cupos}', '${self.form_date.estado}', '${self.form_date.tipo_de_cita}', '${self.form_date.modulo}', '${moment().format('YYYY-MM-DD HH:mm:ss')}')`, [], function(tran, data){
+					    	self.listDates();
+							self.clearForm(true);
+							self.status_small = false;
+					    });
+					});
+				}else{
+					this.status_small = true;
+				}
+					
 			},
 			clearForm(bandera){
 				// el numero 1 representa el formulario de Usuarios y el numero 2 representa el formulario de citas
@@ -623,19 +698,56 @@
 				var aux = 0;
 				self.events = [];	
 				this.DB.transaction(function (tran) {
-              		tran.executeSql(`select c.modulo,c.hora,u.placa,c.cupos,c.disponible,c.fecha from cita_detalle cd join cita c on cd.id_cita = c.id join user u on cd.id_user_transportador = u.id where c.fecha = '${date}' and cd.estado = 'Tomada' order by 1,2 asc`, [], function (tran, data) {
+              		tran.executeSql(`select c.modulo,c.id, c.hora,u.placa,c.cupos,c.disponible,c.fecha from cita_detalle cd join cita c on cd.id_cita = c.id join user u on cd.id_user_transportador = u.id where c.fecha = '${date}' and cd.estado = 'Tomada' order by 1,2 asc`, [], function (tran, data) {
               			self.clearTable();
-              			console.log(`select c.modulo,c.hora,u.placa,c.cupos,c.disponible,c.fecha from cita_detalle cd join cita c on cd.id_cita = c.id join user u on cd.id_user_transportador = u.id where c.fecha = '${date}' and cd.estado = 'Tomada' order by 1,2 asc`);
+              			self.listEventsDev(date);
                    		if (data.rows.length > 0) {
-							   
 							   for(let i = 0; i < data.rows.length; i++){
 								   self.events.push(data.rows[i])
-							   }			   
-							   if(aux == 0)self.drawRows();
-							   aux++;
+							   }	   
                    		}
                		});
            		});
+			},
+			listEventsDev(date){
+				var self = this;
+				setTimeout(function(){
+					var aux = 0;
+					var array_aux = [];
+					var array_aux2 = self.removeDuplicated(self.events, "id");
+					array_aux2.forEach((item) => {
+						if (item.id) {
+							array_aux.push(item.id);
+						}
+					});
+					console.log(array_aux);
+					self.DB.transaction(function (tran) {
+	              		tran.executeSql(`select c.modulo,c.hora,c.cupos,c.disponible,c.fecha from cita c where c.fecha = '${date}' and c.id not in(${array_aux.join()}) order by 1,2 asc;`, [], function (tran, data) {
+	              			console.log(`select c.modulo,c.hora,c.cupos,c.disponible,c.fecha from cita c where c.fecha = '${date}' and c.id not in(${array_aux.join()}) order by 1,2 asc;`)
+	              			for(let i = 0; i < data.rows.length; i++){
+							   self.events.push(data.rows[i])
+						   	}
+						   	//self.events = self.removeDuplicated(self.events, "hora");
+	    					if(aux == 0)self.drawRows();
+							aux++;
+							console.log(self.events);
+	               		});
+	           		});
+				},500);
+					
+			},
+			removeDuplicated(originalArray, prop){
+				var newArray = [];
+			    var lookupObject  = {};
+
+			    for(var i in originalArray.reverse()) {
+			    	lookupObject[originalArray[i][prop]] = originalArray[i];		        
+			    }
+
+			    for(i in lookupObject) {
+			        newArray.push(lookupObject[i]);
+			    }
+			    return newArray;
 			},
 			clearTable(){
 				this.modulos.forEach((modulo) => {
@@ -658,18 +770,42 @@
 							self.ranges.forEach((range) => {	
 								var exist = document.getElementById(modulo+'_'+range)
 								if(exist){
-									if(range == event.hora)exist.innerHTML += `<td ><span class="border2">${event.placa}</span></td>`;				
+									if(range == event.hora){
+										if (event.placa) {
+											exist.innerHTML += `<td ><span class="border2">${event.placa}</span></td>`;		
+										}else{
+											exist.innerHTML += 	`									
+												<tr>
+													<td id='${modulo}_${range}'>
+														<span class="center">CUP: ${event.disponible}</span>
+													</td>
+												</tr>
+											`;
+										}
+										
+									}	
 											
 								}else{
-									if(range == event.hora){									
-										trRow.innerHTML += 	`									
-											<tr>
-												<td id='${modulo}_${range}'>
-													<span class="center">CUP: ${event.disponible}</span>
-													<span class="border2">${event.placa}</span>
-												</td>
-											</tr>
-										`;
+									if(range == event.hora){
+										if (event.placa) {
+											trRow.innerHTML += 	`									
+												<tr>
+													<td id='${modulo}_${range}'>
+														<span class="center">CUP: ${event.disponible}</span>
+														<span class="border2">${event.placa}</span>
+													</td>
+												</tr>
+											`;
+										}else{
+											trRow.innerHTML += 	`									
+												<tr>
+													<td id='${modulo}_${range}'>
+														<span class="center">CUP: ${event.disponible}</span>
+													</td>
+												</tr>
+											`;
+										}									
+											
 									
 									}else {
 										trRow.innerHTML += 	`<td id='${modulo}_${range}'></td>`;
@@ -688,6 +824,11 @@
 			}
 		},
 		mounted(){
+			var self = this;
+			this.status_loader = true;
+			setTimeout(function(){
+				self.status_loader = false;
+			},1500);
 			this.DB = openDatabase('kturning', '1.0', 'This is a client side database', 50 * 1024 * 1024);
 			this.listUsers();
 			this.listDates();

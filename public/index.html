@@ -7,6 +7,42 @@
     <link rel="icon" href="<%= BASE_URL %>favicon.ico">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.2/css/all.min.css" integrity="sha512-HK5fgLBL+xu6dm/Ii3z4xhlSUyZgTT9tuc/hSrtw6uzJOvgRr2a9jyxxT1ely+B+xFAmJKVSTbpM/CuL7qxO8w==" crossorigin="anonymous" />
     <title><%= htmlWebpackPlugin.options.title %></title>
+    <style type="text/css">
+      *:focus{outline:none;}
+
+      #dates2 th {
+      padding-top: 12px;
+      padding-bottom: 12px;
+      background: #7BBD8F;
+      color: white;
+      text-align: center;
+    }
+
+    #dates2 td, #dates2 th {
+      border: 1px solid #ddd;
+      padding: 6px;
+      font-size: 14px;
+    }
+
+    #dates2 tr{background-color: #f2f2f2;}
+
+    .border2{
+      border: 1px solid #ddd;
+      padding: 3px;
+      width: 100%;
+      background-color: #5390C9;
+      font-weight: 600;
+      color: #fff;
+      display:block;
+      margin-top: 7px;
+    }
+
+    .center{
+        width: 100%;
+        text-align: center;   
+        font-weight: 600;
+      }
+    </style>
   </head>
   <body>
     <noscript>

@@ -17,8 +17,20 @@
 						</div>
 					</div>
 				</div>
+				<div class="first-option-2">
+					<div class="variantes">					
+						<div class="variante1">
+							<select v-model="date_state">
+								<option value="Disponible">Disponible</option>
+								<option value="Vencida">Vencida</option>
+								<option value="Tomada">Tomada</option>
+							  	<option value="Cumplida">Cumplida</option>
+							</select>	
+						</div>
+					</div>
+				</div>
 				<div class="second-option">
-					<button @click="listDates(selected)">Consultar</button>
+					<button @click="listDates(selected, date_state, false)">Consultar</button>
 				</div>
 			</div>
 		</div>
@@ -31,11 +43,14 @@
 				<div class="single-date-info">
 					<h4><i class="far fa-calendar-alt"></i> {{ item.fecha }}</h4>
 					<h4><i class="far fa-clock"></i> {{ item.hora }}</h4>
-					<h4 class="state" v-show="item.disponible > 0"><i class="fas fa-circle"></i>Disponible</h4>
+					<h4 class="state" v-show="item.disponible > 0 && item.estado != 'Cumplida'"><i class="fas fa-circle"></i>Disponible</h4>
+					<h4 class="state" v-show="item.estado == 'Cumplida'"><i class="fas fa-circle"></i>Cumplida</h4>
 					<h4 class="state2" v-show="item.disponible == 0"><i class="fas fa-circle"></i>Sin disponibilidad</h4>
+					<h4 class="state3" v-if="item.estado == 'Tomada' && item.fecha >= date"><i class="fas fa-circle"></i>{{ item.estado }}</h4>
+					<h4 class="state4" v-if="item.fecha < date && !item.peso_entrada"><i class="fas fa-circle"></i>Vencida</h4>
 				</div>
 				<div class="single-date-button">
-					<button @click="validarCita(item)" v-show="item.disponible > 0">Tomar cita</button>
+					<button @click="validarCita(item)" v-show="item.disponible > 0 && item.estado != 'Cumplida'">Tomar cita</button>
 				</div>
 			</div>
 		</div>
@@ -49,9 +64,9 @@
 				</div>
 			</div>
 		</div>
-		<div class="flotant-option" @click="user_status = true">
+		<!--<div class="flotant-option" @click="user_status = true">
 			<i class="far fa-calendar-alt"></i>
-		</div>
+		</div>-->
 		<div class="container-detail-likes" v-show="user_status">
 			<div class="content-likes-list-2">
 				<div class="likes-wrapper">
@@ -72,14 +87,52 @@
 				</div>
 			</div>
 		</div>
+		<div class="content-loader" v-if="status_loader">
+			<div class="rotate-icon">
+				
+			</div>
+		</div>
 	</div>
 </template>
 
-<style>
+<style scoped>
 	*{
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
+	}
+
+	.content-loader{
+		width: 100%;
+		height: 100vh;
+		background: rgba(255, 255, 255,.9);
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.rotate-icon{
+		width: 40px;
+		height: 40px;
+		border-top: 6px solid #5493C9;
+		border-right: 4px solid #5493C9;
+		border-radius: 50%;
+		animation: rotar 1s infinite ease-in-out;
+	}
+
+	@keyframes rotar {
+		from{
+			transform: rotate(0deg);
+		}
+		to{
+			transform: rotate(360deg);
+		}
+		
 	}
 
 	.button-option{
@@ -261,17 +314,21 @@
 	.filter-options{
 		width: 100%;
 		display: flex;
-		justify-content: center;
+		justify-content: space-between;
 		align-items: center;
 		padding: 15px 0px 0px 0px;
 	}
 
 	.first-option{
-		width: 60%;
+		width: 30%;
+	}
+
+	.first-option-2{
+		width: 30%;
 	}
 
 	.second-option{
-		width: 40%;
+		width: 33%;
 		text-align: right;
 	}
 
@@ -401,6 +458,8 @@
 	export default{
 		data(){
 			return{
+				date_state: "Tomada",
+				status_loader: false,
 				date: moment().format('YYYY-MM-DD'),
 				user_status: false,
 				listUser: [],
@@ -461,40 +520,58 @@
 				    exe.executeSql(`update cita set disponible = disponible - 1 where id = ${id_cita}`);
 				});
 			},
-			listDates(fecha){
+			listDates(fecha, estado, propias = false){
 				this.dateList = [];
+				if (estado == "Disponible") {
+					estado = "Creada"
+				}
+				var sql = `select * from cita where fecha = '${fecha}' and estado = '${estado}' and disponible > 0 and disponible is not null`;
 				var self = this;
+				if (propias || estado == "Tomada" ) {
+					self.listDateUser(estado, fecha);
+					return false;
+				}else{
+					if (estado == "Cumplida") {
+						sql = `select * from cita c join cita_detalle cd on c.id = cd.id_cita where fecha = '${fecha}' and cd.peso_neto is not null and cd.id_user_transportador = '${self.id_user_transportador}'`;
+					}
+				}
 				this.DB.transaction(function (tran) {
-              		tran.executeSql(`select * from cita where fecha = '${fecha}'`, [], function (tran, data) {
+              		tran.executeSql(sql, [], function (tran, data) {
                    		if (data.rows.length > 0) {
                    			self.dateList = data.rows;
                    		}
                		});
            		});
 			}, 
-			listDateUser(){
+			listDateUser(estado, fecha){
 				this.listUser = [];
+				this.dateList = [];
 				var self = this;
 				this.DB.transaction(function (tran) {
-              		tran.executeSql(`select cd.*, c.fecha from cita_detalle cd join cita c on c.id = cd.id_cita where id_user_transportador = '${self.id_user_transportador}'`, [], function (tran, data) {
+              		tran.executeSql(`select cd.*, c.fecha, c.hora, c.modulo from cita_detalle cd join cita c on c.id = cd.id_cita where id_user_transportador = '${self.id_user_transportador}' and cd.estado = '${estado}' and c.fecha = '${fecha}'`, [], function (tran, data) {
                    		if (data.rows.length > 0) {
                    			self.listUser = data.rows;
+                   			self.dateList = data.rows;
                    		}
                		});
            		});
 			}
 		},
 		mounted(){
+			var self = this;
 			this.DB = openDatabase('kturning', '1.0', 'This is a client side database', 50 * 1024 * 1024);
-			this.listDates();
 			this.dates.forEach((item) => {
 				item.fecha = moment(item.fecha).format('YYYY-MM-DD')
 			})
-			this.listDates(moment().format('YYYY-MM-DD'));
+			this.listDates(moment().format('YYYY-MM-DD'), this.date_state, true);
 			if (!localStorage.getItem('id_user_transportador')) {
 				location.href = "/";
 			}
 			this.listDateUser();
+			this.status_loader = true;
+			setTimeout(function(){
+				self.status_loader = false;
+			},1500);
 		}
 	}
 </script>

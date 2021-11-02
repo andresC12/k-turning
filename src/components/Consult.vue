@@ -49,15 +49,15 @@
 				</div>
 			</div>
 			<div class="register-button">
-				<button @click="status_peso = true">Registrar peso</button>
+				<button @click="status_peso = true">{{ status_text }}</button>
 			</div>
 		</div>
 		<div class="container-detail-likes" v-if="status_peso">
 			<div class="content-likes-list">
 				<h4>Registrar peso</h4>
 				<div class="input-options">
-					<input type="text" placeholder="Peso de entrada" v-model="peso_entrada">
-					<input type="text" placeholder="Peso de salida" v-model="peso_salida">
+					<input type="text" placeholder="Peso de entrada" v-model="peso_entrada" v-show="status_text=='Autorizar ingreso'">
+					<input type="text" placeholder="Peso de salida" v-model="peso_salida" v-show="status_text=='Autorizar salida'">
 				</div>
 				<!--<div class="result-peso">
 					<h5>Peso neto: {{form[0].peso_neto}}</h5>
@@ -65,15 +65,53 @@
 				<button @click="updatePeso()">Calcular</button>
 			</div>
 		</div>
+		<div class="content-loader" v-if="status_loader">
+			<div class="rotate-icon">
+				
+			</div>
+		</div>
 	</div>
 </template>
 
-<style>
+<style scoped>
 
 	*{
 		margin: 0;
 		padding: 0;
 		box-sizing: border-box;
+	}
+
+	.content-loader{
+		width: 100%;
+		height: 100vh;
+		background: rgba(255, 255, 255,.9);
+		position: fixed;
+		top: 0;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+	}
+
+	.rotate-icon{
+		width: 40px;
+		height: 40px;
+		border-top: 6px solid #5493C9;
+		border-right: 4px solid #5493C9;
+		border-radius: 50%;
+		animation: rotar 1s infinite ease-in-out;
+	}
+
+	@keyframes rotar {
+		from{
+			transform: rotate(0deg);
+		}
+		to{
+			transform: rotate(360deg);
+		}
+		
 	}
 
 	.header-options{
@@ -308,6 +346,8 @@
 	export default{
 		data(){
 			return{
+				status_text: "Autorizar ingreso",
+				status_loader: false,
 				peso_entrada: 0,
 				peso_salida: 0,
 				peso_neto: 0,
@@ -343,10 +383,20 @@
 				this.DB.transaction(function (tran) {
               		tran.executeSql(`select c.fecha, u.email,c.hora,c.modulo,c.tipo_de_cita,cd.estado,cd.id, coalesce(peso_entrada,0) as peso_entrada,coalesce(peso_salida,0) as peso_salida,coalesce(peso_neto,0) as peso_neto from cita c join cita_detalle cd join user u on u.id = cd.id_user_transportador where cd.autorizacion = ${autorization} order by cd.id desc LIMIT 1;`, [], function (tran, data) {
                    		if (data.rows.length > 0) {
+                   			self.status_loader = true;
+							setTimeout(function(){
+								self.status_loader = false;
+							},1500);
                    			self.form = data.rows;
                    			self.peso_entrada = self.form[0].peso_entrada;
                    			self.peso_salida = self.form[0].peso_salida;
                    			self.peso_neto = self.form[0].peso_neto;
+                   			if (!self.peso_entrada && !self.peso_salida) {
+                   				self.status_text = "Autorizar ingreso"
+                   			}
+                   			if (self.peso_entrada && !self.peso_salida) {
+                   				self.status_text = "Autorizar salida"
+                   			}
                    		}
                		});
            		});
